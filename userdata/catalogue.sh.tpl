@@ -18,6 +18,15 @@ curl -fsSL -o /tmp/${component_name}.zip "${artifact_url}"
 unzip -o /tmp/${component_name}.zip -d /app
 
 cd /app
+
+# Configure Go environment
+export HOME=/root
+export GOPATH=/root/go
+export GOMODCACHE=/root/go/pkg/mod
+export GOCACHE=/root/.cache/go-build
+
+mkdir -p "$GOMODCACHE" "$GOCACHE"
+
 go mod tidy
 CGO_ENABLED=0 go build -o /app/${component_name} .
 
