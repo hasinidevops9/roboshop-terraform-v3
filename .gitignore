@@ -1,0 +1,18 @@
+.terraform/
+
+*.tfstate
+*.tfstate.*
+
+crash.log
+crash.*.log
+
+# The class Makefile copies env-$(env)/*.auto.tfvars into the repo root.
+# Keep the copies out of git. The source files stay in env-dev/.
+/*.auto.tfvars
+
+*.tfplan
+
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
