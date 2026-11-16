@@ -2,6 +2,8 @@
 # Frontend is internet-facing. Catalogue is internal.
 # The listener uses the component application port, so catalogue.hdevops09.online:8002
 # still reaches catalogue through the internal load balancer.
+# Instances join the target group through the Auto Scaling Group, not a
+# Terraform target-group attachment.
 
 resource "aws_lb" "app" {
   for_each = local.app_components
@@ -12,10 +14,9 @@ resource "aws_lb" "app" {
   security_groups    = [aws_security_group.alb[each.key].id]
   subnets            = data.aws_subnets.default.ids
 
-  tags = {
-    Name        = each.key
-    Environment = var.env
-  }
+  tags = merge(local.common_tags, {
+    Name = each.key
+  })
 }
 
 resource "aws_lb_target_group" "app" {
@@ -29,17 +30,17 @@ resource "aws_lb_target_group" "app" {
   health_check {
     path                = each.value.health_path
     protocol            = "HTTP"
-    matcher             = "200-399"
+    matcher             = "200"
+    port                = "traffic-port"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
 
-  tags = {
-    Name        = each.key
-    Environment = var.env
-  }
+  tags = merge(local.common_tags, {
+    Name = each.key
+  })
 }
 
 resource "aws_lb_listener" "app" {
@@ -53,12 +54,4 @@ resource "aws_lb_listener" "app" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app[each.key].arn
   }
-}
-
-resource "aws_lb_target_group_attachment" "app" {
-  for_each = local.app_instances
-
-  target_group_arn = aws_lb_target_group.app[each.value.component_name].arn
-  target_id        = aws_instance.app[each.key].id
-  port             = local.app_components[each.value.component_name].app_port
 }

@@ -1,22 +1,13 @@
 output "instance_ids" {
-  value = merge(
-    { for name, instance in aws_instance.main : name => instance.id },
-    { for name, instance in aws_instance.app : name => instance.id }
-  )
+  value = { for name, instance in aws_instance.main : name => instance.id }
 }
 
 output "private_ips" {
-  value = merge(
-    { for name, instance in aws_instance.main : name => instance.private_ip },
-    { for name, instance in aws_instance.app : name => instance.private_ip }
-  )
+  value = { for name, instance in aws_instance.main : name => instance.private_ip }
 }
 
 output "public_ips" {
-  value = merge(
-    { for name, instance in aws_instance.main : name => instance.public_ip },
-    { for name, instance in aws_instance.app : name => instance.public_ip }
-  )
+  value = { for name, instance in aws_instance.main : name => instance.public_ip }
 }
 
 output "dns_records" {
@@ -28,6 +19,26 @@ output "dns_records" {
 
 output "alb_dns_names" {
   value = { for name, lb in aws_lb.app : name => lb.dns_name }
+}
+
+output "launch_template_ids" {
+  value = { for name, template in aws_launch_template.app : name => template.id }
+}
+
+output "autoscaling_groups" {
+  value = {
+    for name, group in aws_autoscaling_group.app : name => {
+      name    = group.name
+      min     = group.min_size
+      desired = group.desired_capacity
+      max     = group.max_size
+      arn     = group.arn
+    }
+  }
+}
+
+output "scaling_alarms" {
+  value = { for name, alarm in aws_cloudwatch_metric_alarm.app : name => alarm.arn }
 }
 
 output "vpc_id" {
